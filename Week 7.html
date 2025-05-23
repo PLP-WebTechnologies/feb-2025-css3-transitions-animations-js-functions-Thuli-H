@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Magic Heart Button</title>
+<style>
+  body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background: #fff0f6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px;
+  }
+
+  h1 {
+    color: #d6336c;
+  }
+
+  /* Heart shape button */
+  #heartBtn {
+    width: 100px;
+    height: 90px;
+    background: #ff4081;
+    position: relative;
+    cursor: pointer;
+    transform: rotate(-45deg);
+    transition: background 0.3s ease;
+    margin-top: 30px;
+    outline: none;
+    border: none;
+  }
+
+  #heartBtn::before,
+  #heartBtn::after {
+    content: "";
+    width: 100px;
+    height: 90px;
+    background: #ff4081;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  #heartBtn::before {
+    top: -50px;
+    left: 0;
+  }
+
+  #heartBtn::after {
+    top: 0;
+    left: 50px;
+  }
+
+  /* Pulse animation for heart */
+  @keyframes heartPulse {
+    0% {
+      background: #ff4081;
+      box-shadow: 0 0 0 0 rgba(255, 64, 129, 0.7);
+      transform: rotate(-45deg) scale(1);
+    }
+    50% {
+      background: #ff80aa;
+      box-shadow: 0 0 15px 15px rgba(255, 64, 129, 0.4);
+      transform: rotate(-45deg) scale(1.15);
+    }
+    100% {
+      background: #ff4081;
+      box-shadow: 0 0 0 0 rgba(255, 64, 129, 0);
+      transform: rotate(-45deg) scale(1);
+    }
+  }
+
+  /* Animation trigger */
+  .pulse {
+    animation: heartPulse 1s ease forwards;
+  }
+
+  #message {
+    margin-top: 20px;
+    color: #d6336c;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<h1>Click the Magic Heart!</h1>
+<button id="heartBtn" aria-label="Magic Heart Button"></button>
+<div id="message"></div>
+
+<script>
+  const heartBtn = document.getElementById('heartBtn');
+  const message = document.getElementById('message');
+  const storageKey = 'magicHeartColor';
+
+  // Array of cute pink/purple colors
+  const colors = ['#ff4081', '#e91e63', '#f06292', '#ad1457', '#f48fb1'];
+
+  // Load last saved color or default
+  function loadColor() {
+    const savedColor = localStorage.getItem(storageKey);
+    if (savedColor && colors.includes(savedColor)) {
+      setHeartColor(savedColor);
+      message.textContent = `Your last favorite color was ${savedColor}`;
+    } else {
+      setHeartColor(colors[0]);
+      message.textContent = "Pick your favorite heart color!";
+    }
+  }
+
+  // Set the heart color
+  function setHeartColor(color) {
+    heartBtn.style.background = color;
+    heartBtn.style.setProperty('--heart-color', color);
+    heartBtn.style.setProperty('--heart-shadow-color', color + '88');
+    heartBtn.style.setProperty('--heart-color-light', lightenColor(color, 30));
+  }
+
+  // Helper function to lighten color (simple)
+  function lightenColor(hex, percent) {
+    const num = parseInt(hex.replace("#",""),16),
+          amt = Math.round(2.55 * percent),
+          R = (num >> 16) + amt,
+          G = (num >> 8 & 0x00FF) + amt,
+          B = (num & 0x0000FF) + amt;
+    return "#" + (
+      0x1000000 +
+      (R<255?R<1?0:R:255)*0x10000 +
+      (G<255?G<1?0:G:255)*0x100 +
+      (B<255?B<1?0:B:255)
+    ).toString(16).slice(1);
+  }
+
+  // Pick a new random color from the list, different from current
+  function pickNewColor(current) {
+    let filtered = colors.filter(c => c !== current);
+    return filtered[Math.floor(Math.random() * filtered.length)];
+  }
+
+  // When heart is clicked
+  heartBtn.addEventListener('click', () => {
+    // Pick a new color and set it
+    const currentColor = heartBtn.style.background;
+    const newColor = pickNewColor(currentColor);
+    setHeartColor(newColor);
+
+    // Trigger pulse animation
+    heartBtn.classList.remove('pulse'); // reset animation
+    void heartBtn.offsetWidth; // trigger reflow for restart
+    heartBtn.classList.add('pulse');
+
+    // Save chosen color in localStorage
+    localStorage.setItem(storageKey, newColor);
+
+    message.textContent = `You chose a lovely color: ${newColor}`;
+  });
+
+  // Load color on page load
+  window.onload = loadColor;
+</script>
+
+</body>
+</html>
